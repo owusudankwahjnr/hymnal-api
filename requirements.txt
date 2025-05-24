@@ -23,3 +23,4 @@ uvicorn==0.34.2
 pydantic-settings==2.9.1
 python-dotenv==1.1.0
 gunicorn
+pydantic[email]
