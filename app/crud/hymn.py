@@ -5,6 +5,7 @@ from app.models.chorus import Chorus
 from app.schemas.hymn import HymnCreate, HymnUpdate
 from typing import List
 
+
 def get(db: Session, id: int) -> Hymn | None:
     return db.query(Hymn).filter(Hymn.id == id).first()
 
@@ -12,8 +13,10 @@ def get(db: Session, id: int) -> Hymn | None:
 def get_all(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Hymn).offset(skip).limit(limit).all()
 
+
 def search_by_title(db: Session, title: str, skip: int = 0, limit: int = 100) -> list[Hymn]:
     return (db.query(Hymn).filter(Hymn.title.ilike(f"%{title}%")).offset(skip).limit(limit).all())
+
 
 def create(db: Session, obj_in: HymnCreate) -> Hymn:
     hymn = Hymn(
@@ -83,12 +86,12 @@ def delete(db: Session, db_obj: Hymn):
 def get_by_hymnbook_id(db: Session, hymnbook_id: int) -> List[Hymn]:
     return db.query(Hymn).filter(Hymn.hymn_book_id == hymnbook_id).all()
 
+
 def search_by_title_in_book(db: Session, hymnbook_id: int, title: str) -> List[Hymn]:
     return db.query(Hymn).filter(
         Hymn.hymn_book_id == hymnbook_id,
         Hymn.title.ilike(f"%{title}%")
     ).all()
-
 
 
 def get_hymn_slides_by_book(db: Session, hymnbook_id: int):
@@ -104,6 +107,7 @@ def get_hymn_slides_by_book(db: Session, hymnbook_id: int):
             "chorus": chorus
         })
     return slides
+
 
 # app/crud/hymn.py
 def get_hymn_slide_by_id(db: Session, hymn_id: int) -> dict | None:

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
-from app.schemas.verse import VerseOut
-from app.schemas.chorus import ChorusOut
+from app.schemas.verse import VerseOut, VerseCreate
+from app.schemas.chorus import ChorusOut, ChorusCreate
 from pydantic import field_validator
 
 class HymnBase(BaseModel):
@@ -10,8 +10,8 @@ class HymnBase(BaseModel):
     hymn_book_id: int
 
 class HymnCreate(HymnBase):
-    verses: List[VerseOut]
-    chorus: Optional[ChorusOut] = None
+    verses: List[VerseCreate]
+    chorus: Optional[ChorusCreate] = None
 
     @field_validator("number")
     def number_must_be_positive(cls, v):
