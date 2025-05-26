@@ -23,8 +23,8 @@ class HymnUpdate(BaseModel):
     number: Optional[int] = None
     title: Optional[str] = None
     hymn_book_id: Optional[int] = None
-    verses: Optional[List[VerseOut]] = None
-    chorus: Optional[ChorusOut] = None
+    verses: Optional[List[VerseCreate]] = None
+    chorus: Optional[ChorusCreate] = None
 
 
 class HymnOut(HymnBase):

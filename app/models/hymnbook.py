@@ -8,4 +8,4 @@ class HymnBook(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
 
-    hymns = relationship("Hymn", back_populates="book")
+    hymns = relationship("Hymn", back_populates="book", cascade="all, delete-orphan")
