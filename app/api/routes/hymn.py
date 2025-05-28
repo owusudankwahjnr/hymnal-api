@@ -35,7 +35,7 @@ def create_hymn(
     except IntegrityError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Hymn with number {hymn_in.number} already exists in hymnbook {hymn_in.hymn_book_id}"
+            detail=f"Hymn with number {hymn_in.number} already exists in hymnbook {hymn_in.hymn_book_id} {e}"
         )
 
 
