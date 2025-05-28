@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 class Hymn(Base):
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     number = Column(Integer, index=True)
     title = Column(String, index=True)
     hymn_book_id = Column(Integer, ForeignKey("hymnbook.id"))

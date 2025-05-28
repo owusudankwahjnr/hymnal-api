@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 class Verse(Base):
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     hymn_id = Column(Integer, ForeignKey("hymn.id"))
     order = Column(Integer, nullable=False)
     text = Column(Text, nullable=False)
