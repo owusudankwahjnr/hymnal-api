@@ -16,7 +16,7 @@ def create(db: Session, obj_in: HymnBookCreate) -> HymnBook:
     return db_obj
 
 def update(db: Session, db_obj: HymnBook, obj_in: HymnBookUpdate) -> HymnBook:
-    for field, value in obj_in.dict(exclude_unset=True).items():
+    for field, value in obj_in.model_dump(exclude_unset=True).items():
         setattr(db_obj, field, value)
     db.commit()
     db.refresh(db_obj)

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from typing import List
-
+from sqlalchemy.exc import IntegrityError
 from app import crud
 from app.api.deps import get_db, require_admin
 from app.schemas.hymn import HymnOut, HymnCreate, HymnUpdate, HymnSlide
@@ -18,11 +18,26 @@ def read_hymns(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 @router.post("/", response_model=HymnOut, status_code=status.HTTP_201_CREATED, summary="Create a new hymn",
     description="Only staff or superusers can add new hymns. A hymn must include at least one verse and may optionally include a chorus.")
 def create_hymn(
-    hymn_in: HymnCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+        hymn_in: HymnCreate,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(require_admin)
 ):
-    return crud.hymn.create(db=db, obj_in=hymn_in)
+    # Validate at least one verse
+    if not hymn_in.verses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one verse is required"
+        )
+
+    try:
+        hymn = crud.hymn.create(db=db, obj_in=hymn_in)
+        return hymn
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Hymn with number {hymn_in.number} already exists in hymnbook {hymn_in.hymn_book_id}"
+        )
+
 
 
 @router.get(
@@ -71,7 +86,7 @@ def get_hymn_slide(
     return slide
 
 
-@router.get("/book/{hymnbook_id}/paged", response_model=List[HymnSlide], summary="Slideshow hymns for mobile app return paginated results")
+@router.get("/book/{hymnbook_id}/paged", response_model=List[HymnOut], summary="Slideshow hymns for mobile app return paginated results")
 def get_hymns_paged(
     hymnbook_id: int,
     skip: int = 0,

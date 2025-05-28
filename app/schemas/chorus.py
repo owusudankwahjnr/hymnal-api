@@ -11,7 +11,7 @@ class ChorusCreate(ChorusBase):
             raise ValueError("Chorus text must be at least 5 characters long")
         return v
 
-class ChorusUpdate(ChorusCreate):
+class ChorusUpdate(ChorusBase):
     pass
 
 class ChorusOut(ChorusBase):

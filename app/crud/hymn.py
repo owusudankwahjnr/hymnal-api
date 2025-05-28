@@ -64,14 +64,24 @@ def update(db: Session, db_obj: Hymn, obj_in: HymnUpdate) -> Hymn:
             )
             db.add(verse)
 
-    # Update chorus
-    if obj_in.chorus is not None:
-        existing_chorus = db.query(Chorus).filter(Chorus.hymn_id == db_obj.id).first()
-        if existing_chorus:
-            existing_chorus.text = obj_in.chorus.text
-        else:
-            chorus = Chorus(hymn_id=db_obj.id, text=obj_in.chorus.text)
-            db.add(chorus)
+        # Update or delete chorus
+        if obj_in.chorus is not None:
+            existing_chorus = db.query(Chorus).filter(Chorus.hymn_id == db_obj.id).first()
+            if obj_in.chorus.text is None or obj_in.chorus.text.strip() == "":
+                # Delete chorus if text is None or empty
+                if existing_chorus:
+                    db.delete(existing_chorus)
+
+            else:
+                # Update or create chorus with non-empty text
+                if existing_chorus:
+
+                    existing_chorus.text = obj_in.chorus.text
+                    print(f'triggered with chorus as {obj_in.chorus.text}')
+                else:
+                    chorus = Chorus(hymn_id=db_obj.id, text=obj_in.chorus.text)
+                    # print('triggered')
+                    db.add(chorus)
 
     db.commit()
     db.refresh(db_obj)
@@ -96,17 +106,8 @@ def search_by_title_in_book(db: Session, hymnbook_id: int, title: str) -> List[H
 
 def get_hymn_slides_by_book(db: Session, hymnbook_id: int):
     hymns = db.query(Hymn).filter(Hymn.hymn_book_id == hymnbook_id).all()
-    slides = []
-    for hymn in hymns:
-        verses = [verse.text for verse in hymn.verses]
-        chorus = hymn.chorus.text if hymn.chorus else None
-        slides.append({
-            "title": hymn.title,
-            "number": hymn.number,
-            "verses": verses,
-            "chorus": chorus
-        })
-    return slides
+
+    return hymns
 
 
 # app/crud/hymn.py

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from app.schemas.verse import VerseOut, VerseCreate
-from app.schemas.chorus import ChorusOut, ChorusCreate
+from app.schemas.chorus import ChorusOut, ChorusCreate, ChorusUpdate
 from pydantic import field_validator
 
 class HymnBase(BaseModel):
@@ -24,7 +24,7 @@ class HymnUpdate(BaseModel):
     title: Optional[str] = None
     hymn_book_id: Optional[int] = None
     verses: Optional[List[VerseCreate]] = None
-    chorus: Optional[ChorusCreate] = None
+    chorus: Optional[ChorusUpdate] = None
 
 
 class HymnOut(HymnBase):
