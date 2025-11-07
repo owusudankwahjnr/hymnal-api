@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func, String
+from sqlalchemy import select, or_, func, String, and_, cast, exists
 from fastapi import HTTPException, UploadFile
 from hymnal.models.hymn_book import HymnBook
 from hymnal.models.hymn import Hymn
@@ -170,18 +170,64 @@ async def search_hymns_by_filters(
     query = select(Hymn, HymnBook.title.label("hymn_book_title")).join(HymnBook)
 
     filters = []
+    is_asc = False
     if title is not None:
-        filters.append(Hymn.title.ilike(f"%{title}%"))
+        # ilike for title (case-insensitive partial match)
+        title_filter = Hymn.title.ilike(f"%{title}%")
+
+        # ilike for number (cast number to string for partial numeric match)
+        number_filter = cast(Hymn.number, String).ilike(f"%{title}%")
+
+        # combine both
+        filters.append(or_(title_filter, number_filter))
     if number is not None:
         filters.append(Hymn.number == number)
     if hymn_book_id is not None:
         filters.append(Hymn.hymn_book_id == hymn_book_id)
 
     if filters:
-        query = query.filter(*filters)
+        query = query.filter(and_(*filters))
+
+    if hymn_book_id:
+        query = query.order_by(Hymn.number.asc())
+        is_asc = True
+
+    # If title is purely numeric, order by number ascending
+    if title and title.isdigit():
+        if not is_asc:
+            query = query.order_by(Hymn.number.asc())
 
     result = await db.execute(query.offset(skip).limit(limit))
     results = result.all()
+
+    if not results and title:
+        try:
+            # Fallback: Search in content (any verse_content or chorus)
+            content_query = select(Hymn, HymnBook.title.label("hymn_book_title")).join(HymnBook)
+
+            # Chorus filter (assuming chorus is a string)
+            chorus_filter = cast(Hymn.content.op('->>')('chorus'), String).ilike(f"%{title}%")
+
+            # Verses filter (any verse_content in the array) - Use json_array_elements for JSON type
+            verses_elem = func.json_array_elements(Hymn.content.op('->')('verses')).alias('verse_elem')
+            verses_subquery = (
+                select(1)
+                .select_from(verses_elem)
+                .where(cast(verses_elem.c.verse_elem.op('->>')('verse_content'), String).ilike(f"%{title}%"))
+            )
+            verses_filter = exists(verses_subquery)
+
+            content_filters = [or_(chorus_filter, verses_filter)]
+            if hymn_book_id is not None:
+                content_filters.append(Hymn.hymn_book_id == hymn_book_id)
+
+            content_query = content_query.filter(and_(*content_filters))
+            content_result = await db.execute(content_query.offset(skip).limit(limit))
+            results = content_result.all()
+
+        except AttributeError:
+            pass
+
     return [
         HymnSearchResult(
             id=hymn.id,
